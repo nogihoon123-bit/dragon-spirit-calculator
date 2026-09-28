@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>드빌 6정 풀 정령 계산기</title>
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--text:#17181a;--muted:#70757d;--line:#e3e5e8;--accent:#4b63d3}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+.wrap{max-width:680px;margin:0 auto;padding:20px 14px 40px}.title{font-size:24px;font-weight:800;margin:4px 0 6px}.desc{color:var(--muted);font-size:14px;margin-bottom:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}.head{font-weight:800;margin-bottom:12px}.hint{font-size:13px;color:var(--muted);margin:-6px 0 12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.statbox{background:var(--bg);border-radius:13px;padding:12px 6px;text-align:center}.label{font-size:12px;color:var(--muted)}.num{font-size:20px;font-weight:800;margin-top:3px}.gain{font-size:12px;color:var(--muted);margin-top:3px}
+select,button{font:inherit;min-height:46px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--text);padding:0 12px;width:100%}label span{display:block;font-size:13px;color:var(--muted);margin:0 0 5px 2px}
+.opt{display:grid;grid-template-columns:58px 1fr 58px;gap:8px;align-items:center;background:var(--bg);padding:8px;border-radius:13px;margin-top:8px}.optn{font-weight:700;font-size:14px}.pct{text-align:right;font-weight:800}
+.sub{display:grid;grid-template-columns:1fr 70px;gap:10px;align-items:center}.subval{text-align:right;font-weight:800}
+.detail{font-size:14px;line-height:1.8;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.detail b{color:var(--text)}
+button{background:var(--accent);border:0;color:#fff;font-weight:800;margin-top:14px}
+@media(max-width:430px){.wrap{padding:14px 10px 30px}.grid2{grid-template-columns:1fr}.title{font-size:22px}.num{font-size:18px}.opt{grid-template-columns:52px 1fr 52px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="title">드빌 6정 풀 정령 계산기</div>
+<div class="desc">주옵은 1옵 24% · 2옵 28% · 3옵 32% · 4옵 40%, 부옵은 고정 스탯으로 계산합니다.</div>
+
+<section class="card">
+<div class="head">드래곤 선택</div>
+<div class="grid2">
+<label><span>타입</span><select id="type"><option value="hpdef">체방</option><option value="hp">체력</option><option value="def">방어</option></select></label>
+<label><span>성장</span><select id="stage"><option value="trans">초월 7.0</option><option value="asc">강림 7.0</option><option value="bless">축복 9.0</option></select></label>
+</div>
+<div class="stats">
+<div class="statbox"><div class="label">체력</div><div class="num" id="bh">931</div></div>
+<div class="statbox"><div class="label">공격</div><div class="num" id="ba">113</div></div>
+<div class="statbox"><div class="label">방어</div><div class="num" id="bd">245</div></div>
+</div>
+</section>
+
+<section class="card">
+<div class="head">6정 풀 정령 주옵</div>
+<div class="hint">각 옵션에 붙은 스탯만 선택하세요.</div>
+<div id="opts"></div>
+</section>
+
+<section class="card">
+<div class="head">부옵</div>
+<div class="hint">부옵은 %가 아니라 최종 스탯에 고정값으로 더해집니다.</div>
+<div class="sub"><select id="sub"><option value="none">부옵 없음</option><option value="hp">체력</option><option value="def">방어</option></select><div class="subval" id="subVal">+0</div></div>
+</section>
+
+<section class="card">
+<div class="head">최종 합 스탯</div>
+<div class="stats">
+<div class="statbox"><div class="label">체력</div><div class="num" id="fh">931</div><div class="gain" id="gh">+0</div></div>
+<div class="statbox"><div class="label">공격</div><div class="num" id="fa">113</div><div class="gain" id="ga">+0</div></div>
+<div class="statbox"><div class="label">방어</div><div class="num" id="fd">245</div><div class="gain" id="gd">+0</div></div>
+</div>
+<div class="detail" id="detail"></div>
+<button type="button" id="reset">정령 초기화</button>
+</section>
+</main>
+<script>
+const S={
+ hpdef:{trans:[931,113,245],asc:[1080,133,262],bless:[1160,133,282]},
+ hp:{trans:[1107,157,157],asc:[1252,176,176],bless:[1412,176,176]},
+ def:{trans:[755,157,245],asc:[788,185,283],bless:[788,185,323]}
+};
+const P=[24,28,32,40], N=['체력','공격','방어'];
+const opts=document.getElementById('opts');
+P.forEach((p,i)=>{
+ const d=document.createElement('div'); d.className='opt';
+ d.innerHTML=`<div class="optn">${i+1}옵</div><select class="stat"><option value="none">미적용</option><option value="0">체력</option><option value="1">공격</option><option value="2">방어</option></select><div class="pct">${p}%</div>`;
+ opts.appendChild(d);
+});
+const type=document.getElementById('type'),stage=document.getElementById('stage'),sub=document.getElementById('sub');
+const f=x=>Math.round(x).toLocaleString('ko-KR');
+function calc(){
+ const b=S[type.value][stage.value], pct=[0,0,0], flat=[0,0,0];
+ [...document.querySelectorAll('.stat')].forEach((e,i)=>{if(e.value!=='none') pct[+e.value]+=P[i]});
+ if(sub.value==='hp') flat[0]=40;
+ if(sub.value==='def') flat[2]=10;
+ document.getElementById('subVal').textContent=sub.value==='hp'?'+40':sub.value==='def'?'+10':'+0';
+ ['bh','ba','bd'].forEach((id,i)=>document.getElementById(id).textContent=f(b[i]));
+ const fin=b.map((v,i)=>v*(1+pct[i]/100)+flat[i]);
+ const gain=fin.map((v,i)=>v-b[i]);
+ ['fh','fa','fd'].forEach((id,i)=>document.getElementById(id).textContent=f(fin[i]));
+ ['gh','ga','gd'].forEach((id,i)=>document.getElementById(id).textContent='+'+f(gain[i]));
+ document.getElementById('detail').innerHTML=N.map((n,i)=>`${n}: ${f(b[i])}${pct[i]?` + ${pct[i]}%`:''}${flat[i]?` + ${flat[i]}`:''} → <b>${f(fin[i])}</b>`).join('<br>');
+}
+document.addEventListener('change',calc);
+document.getElementById('reset').addEventListener('click',()=>{
+ document.querySelectorAll('.stat').forEach(e=>e.value='none'); sub.value='none'; calc();
+});
+calc();
+</script>
+</body>
+</html>
